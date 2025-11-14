@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Flights",
+  "description": "An AI-powered travel search assistant to find, compare, and book the best flights. It uses Gemini to provide smart suggestions like alternative dates and nearby airports to find the best deals.",
+  "requestFramePermissions": []
+}
