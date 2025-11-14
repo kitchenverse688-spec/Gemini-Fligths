@@ -1,11 +1,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { FlightSearchInput, FlightData, HotelSearchInput, HotelData } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getAiClient = () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error("GEMINI_API_KEY environment variable not set. Please add it to your project secrets to use the AI features.");
+    }
+    return new GoogleGenAI({ apiKey });
+};
 
 const flightResponseSchema = {
     type: Type.OBJECT,
@@ -86,6 +88,7 @@ export const fetchFlightData = async (input: FlightSearchInput): Promise<FlightD
     `;
 
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
@@ -101,7 +104,11 @@ export const fetchFlightData = async (input: FlightSearchInput): Promise<FlightD
         return data;
     } catch (error) {
         console.error("Error fetching flight data from Gemini:", error);
-        throw new Error("Failed to generate flight data. The AI model may be temporarily unavailable.");
+        if (error instanceof Error && error.message.includes('API key not valid')) {
+            throw new Error("Your Gemini API key is not valid. Please check your project secrets and try again.");
+        }
+        // Re-throw other errors, including the missing key error from getAiClient.
+        throw error;
     }
 };
 
@@ -179,6 +186,7 @@ export const fetchHotelData = async (input: HotelSearchInput): Promise<HotelData
     `;
 
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
@@ -198,6 +206,10 @@ export const fetchHotelData = async (input: HotelSearchInput): Promise<HotelData
         return data;
     } catch (error) {
         console.error("Error fetching hotel data from Gemini:", error);
-        throw new Error("Failed to generate hotel data. The AI model may be temporarily unavailable.");
+        if (error instanceof Error && error.message.includes('API key not valid')) {
+            throw new Error("Your Gemini API key is not valid. Please check your project secrets and try again.");
+        }
+        // Re-throw other errors, including the missing key error from getAiClient.
+        throw error;
     }
 };
